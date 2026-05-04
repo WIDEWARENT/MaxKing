@@ -2,222 +2,67 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MAXKING</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: #0d1117;
-            color: #ffffff;
-            min-height: 100vh;
+            font-family: system-ui;
+            padding: 20px;
+            background: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
         }
-        .container { max-width: 500px; margin: 0 auto; padding: 16px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding: 12px 0; }
-        .logo { font-size: 28px; font-weight: 800; background: linear-gradient(135deg, #FFD700, #FFA500); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .theme-toggle { background: rgba(255,255,255,0.1); border: none; color: white; font-size: 20px; cursor: pointer; padding: 8px 12px; border-radius: 30px; }
-        .balance-card { background: linear-gradient(135deg, #1a1a2e, #16213e); border-radius: 28px; padding: 24px 20px; margin-bottom: 20px; text-align: center; border: 1px solid rgba(255,215,0,0.2); cursor: pointer; transition: transform 0.2s; }
-        .balance-card:active { transform: scale(0.98); }
-        .balance-label { font-size: 14px; color: #FFD700; letter-spacing: 1px; margin-bottom: 8px; }
-        .balance-amount { font-size: 48px; font-weight: 800; }
-        .balance-unit { font-size: 16px; font-weight: 400; color: #888; }
-        .stats-card { background: #1a1d24; border-radius: 20px; padding: 20px; margin-bottom: 16px; }
-        .stat-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.08); }
-        .stat-row:last-child { border-bottom: none; }
-        .stat-label { display: flex; align-items: center; gap: 8px; font-size: 15px; color: #aaa; }
-        .stat-value { font-weight: 600; font-size: 16px; }
-        .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-left: 8px; }
-        .dot-on { background: #34c759; }
-        .dot-off { background: #ff3b30; }
-        .button-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 16px; }
-        .btn { background: #1a1d24; border: none; padding: 16px; border-radius: 16px; font-size: 15px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all 0.2s; color: white; }
-        .btn:active { transform: scale(0.96); background: #252a33; }
-        .btn-disabled { opacity: 0.5; pointer-events: none; }
-        .btn-primary { background: linear-gradient(135deg, #FFD700, #FFA500); color: #000; }
-        .btn-danger { background: #ff3b30; }
-        .modal { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 1000; padding: 20px; display: none; flex-direction: column; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; }
-        .modal-title { font-size: 24px; font-weight: 700; }
-        .modal-close { font-size: 28px; cursor: pointer; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(255,255,255,0.1); }
-        .modal-content { flex: 1; overflow-y: auto; }
-        .input-field { width: 100%; padding: 16px; background: #1a1d24; border: 1px solid #2a2d34; border-radius: 16px; color: white; font-size: 16px; margin-bottom: 16px; }
-        .input-field:focus { outline: none; border-color: #FFD700; }
-        .list-item { padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); }
-        .ref-link { background: #1a1d24; padding: 14px; border-radius: 16px; font-family: monospace; word-break: break-all; margin: 16px 0; }
-        .toast { position: fixed; bottom: 80px; left: 20px; right: 20px; background: rgba(0,0,0,0.9); padding: 14px; border-radius: 14px; text-align: center; z-index: 1100; display: none; }
-        .footer { text-align: center; margin-top: 24px; padding: 16px; font-size: 12px; color: #555; }
+        button {
+            background: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            margin: 8px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .balance {
+            font-size: 32px;
+            font-weight: bold;
+            text-align: center;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <div class="logo">MAXKING</div>
-            <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
-        </div>
-
-        <div class="balance-card" onclick="openModal('balance')">
-            <div class="balance-label">ТВОЙ БАЛАНС</div>
-            <div class="balance-amount"><span id="balance">0</span><span class="balance-unit"> USDT</span></div>
-            <div class="balance-detail" style="font-size:12px; margin-top:8px;">👇 Нажми для деталей</div>
-        </div>
-
-        <div class="stats-card">
-            <div class="stat-row"><span class="stat-label">🆔 ID</span><span class="stat-value" id="userId">—</span></div>
-            <div class="stat-row"><span class="stat-label">📦 Сдано номеров</span><span class="stat-value" id="sold">0</span></div>
-            <div class="stat-row"><span class="stat-label">⏳ В очереди</span><span class="stat-value" id="queue">0</span></div>
-            <div class="stat-row"><span class="stat-label">👥 Приглашено</span><span class="stat-value" id="referrals">0</span></div>
-            <div class="stat-row"><span class="stat-label">🤖 Статус бота</span><span class="stat-value"><span id="botStatusText">Работает</span><span class="dot dot-on" id="botDot"></span></span></div>
-            <div class="stat-row"><span class="stat-label">💸 Вывод средств</span><span class="stat-value"><span id="withdrawStatusText">Открыт</span><span class="dot dot-on" id="withdrawDot"></span></span></div>
-        </div>
-
-        <div class="button-grid">
-            <button class="btn" id="btnSell" onclick="openModal('sell')">🎮 Сдать Max</button>
-            <button class="btn" id="btnQueue" onclick="openModal('queue')">📋 Очередь</button>
-            <button class="btn" id="btnWithdraw" onclick="openModal('withdraw')">💸 Вывести</button>
-            <button class="btn" id="btnReferrals" onclick="openModal('referrals')">👥 Рефералы</button>
-            <button class="btn" id="btnTop" onclick="openModal('top')">🏆 ТОП</button>
-            <button class="btn" id="btnSupport" onclick="openModal('support')">💬 Поддержка</button>
-            <button class="btn btn-danger" onclick="closeApp()">❌ Закрыть</button>
-        </div>
-        <div class="footer">MAXKING — зарабатывай с нами</div>
+    <div class="balance">
+        <div>ТВОЙ БАЛАНС</div>
+        <div><span id="balance">0</span> USDT</div>
     </div>
-
-    <!-- Модалки -->
-    <div id="modalSell" class="modal"><div class="modal-header"><span class="modal-title">🎮 Сдать номер</span><span class="modal-close" onclick="closeModal('modalSell')">✕</span></div><div class="modal-content"><input type="tel" id="phoneInput" class="input-field" placeholder="+7XXXXXXXXXX" maxlength="15"><button class="btn btn-primary" style="width:100%" onclick="submitSell()">✅ Отправить</button></div></div>
-    <div id="modalQueue" class="modal"><div class="modal-header"><span class="modal-title">📋 Очередь</span><span class="modal-close" onclick="closeModal('modalQueue')">✕</span></div><div class="modal-content" id="queueContent">Загрузка...</div></div>
-    <div id="modalWithdraw" class="modal"><div class="modal-header"><span class="modal-title">💸 Вывод</span><span class="modal-close" onclick="closeModal('modalWithdraw')">✕</span></div><div class="modal-content"><input type="number" id="withdrawAmount" class="input-field" placeholder="Сумма (мин 12 USDT)"><button class="btn btn-primary" style="width:100%" onclick="submitWithdraw()">💸 Запросить</button></div></div>
-    <div id="modalReferrals" class="modal"><div class="modal-header"><span class="modal-title">👥 Рефералы</span><span class="modal-close" onclick="closeModal('modalReferrals')">✕</span></div><div class="modal-content" id="referralsContent">Загрузка...</div></div>
-    <div id="modalTop" class="modal"><div class="modal-header"><span class="modal-title">🏆 ТОП</span><span class="modal-close" onclick="closeModal('modalTop')">✕</span></div><div class="modal-content" id="topContent">Загрузка...</div></div>
-    <div id="modalSupport" class="modal"><div class="modal-header"><span class="modal-title">💬 Поддержка</span><span class="modal-close" onclick="closeModal('modalSupport')">✕</span></div><div class="modal-content"><textarea id="supportMsg" class="input-field" rows="4" placeholder="Опишите вашу проблему..."></textarea><button class="btn btn-primary" style="width:100%" onclick="submitSupport()">📨 Отправить</button></div></div>
-    <div id="modalBalance" class="modal"><div class="modal-header"><span class="modal-title">💰 Детали баланса</span><span class="modal-close" onclick="closeModal('modalBalance')">✕</span></div><div class="modal-content" id="balanceContent">Загрузка...</div></div>
-
-    <div id="toast" class="toast"></div>
+    
+    <button onclick="sendAction('sell')">🎮 Сдать Max</button>
+    <button onclick="sendAction('queue')">📋 Очередь</button>
+    <button onclick="sendAction('balance')">💰 Баланс</button>
+    <button onclick="sendAction('withdraw')">💸 Вывести</button>
+    <button onclick="sendAction('referrals')">👥 Рефералы</button>
+    <button onclick="sendAction('top')">🏆 ТОП</button>
+    <button onclick="sendAction('support')">💬 Поддержка</button>
+    <button onclick="closeApp()">❌ Закрыть</button>
 
     <script>
         let tg = window.Telegram.WebApp;
-        let user = tg.initDataUnsafe?.user;
-        let userId = user ? user.id : null;
         tg.expand();
         
-        let botStatus = 'on';
-        let withdrawStatus = 'on';
-        
-        function toggleTheme() {
-            let isDark = document.body.style.backgroundColor !== '#ffffff';
-            document.body.style.backgroundColor = isDark ? '#ffffff' : '#0d1117';
-            document.body.style.color = isDark ? '#000000' : '#ffffff';
+        function sendAction(action) {
+            tg.sendData(JSON.stringify({ action: action }));
+            tg.close();
         }
         
-        function showToast(msg, isError = false) {
-            let toast = document.getElementById('toast');
-            toast.textContent = msg;
-            toast.style.backgroundColor = isError ? '#ff3b30' : 'rgba(0,0,0,0.9)';
-            toast.style.display = 'block';
-            setTimeout(() => { toast.style.display = 'none'; }, 3000);
+        function closeApp() {
+            tg.close();
         }
-        
-        function openModal(type) {
-            if (type === 'sell' && botStatus === 'off') { showToast('🔴 Приём аккаунтов закрыт', true); return; }
-            if (type === 'withdraw' && withdrawStatus === 'off') { showToast('🔴 Вывод средств закрыт', true); return; }
-            
-            let modalId = 'modal' + type.charAt(0).toUpperCase() + type.slice(1);
-            let modal = document.getElementById(modalId);
-            if (modal) modal.style.display = 'flex';
-            
-            if (type === 'queue') loadQueue();
-            if (type === 'referrals') loadReferrals();
-            if (type === 'top') loadTop();
-            if (type === 'balance') loadBalanceDetails();
-        }
-        
-        function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
-        function closeApp() { tg.close(); }
-        
-        function sendToBot(action, extra = {}) {
-            tg.sendData(JSON.stringify({ action: action, ...extra }));
-        }
-        
-        function submitSell() {
-            let phone = document.getElementById('phoneInput').value;
-            if (!phone) { showToast('Введи номер телефона', true); return; }
-            sendToBot('sell', { phone: phone });
-            document.getElementById('phoneInput').value = '';
-            closeModal('modalSell');
-            showToast('✅ Аккаунт отправлен на проверку!');
-        }
-        
-        function submitWithdraw() {
-            let amount = document.getElementById('withdrawAmount').value;
-            if (!amount || amount < 12) { showToast('Минимальная сумма 12 USDT', true); return; }
-            sendToBot('withdraw', { amount: amount });
-            document.getElementById('withdrawAmount').value = '';
-            closeModal('modalWithdraw');
-            showToast('✅ Заявка на вывод отправлена!');
-        }
-        
-        function submitSupport() {
-            let msg = document.getElementById('supportMsg').value;
-            if (!msg) { showToast('Введи текст сообщения', true); return; }
-            sendToBot('support', { message: msg });
-            document.getElementById('supportMsg').value = '';
-            closeModal('modalSupport');
-            showToast('✅ Сообщение отправлено администратору!');
-        }
-        
-        function loadBalanceDetails() {
-            let content = document.getElementById('balanceContent');
-            content.innerHTML = '<div style="text-align:center; padding:40px;">⏳ Загрузка...</div>';
-            sendToBot('balance_details');
-        }
-        
-        function loadQueue() {
-            let content = document.getElementById('queueContent');
-            content.innerHTML = '<div style="text-align:center; padding:40px;">⏳ Загрузка...</div>';
-            sendToBot('queue');
-        }
-        
-        function loadReferrals() {
-            let content = document.getElementById('referralsContent');
-            content.innerHTML = '<div style="text-align:center; padding:40px;">⏳ Загрузка...</div>';
-            sendToBot('referrals');
-        }
-        
-        function loadTop() {
-            let content = document.getElementById('topContent');
-            content.innerHTML = '<div style="text-align:center; padding:40px;">⏳ Загрузка...</div>';
-            sendToBot('top');
-        }
-        
-        function copyRefLink(link) { navigator.clipboard.writeText(link); showToast('📋 Ссылка скопирована!'); }
-        
-        // Обновление UI после ответа от бота
-        function updateUI(data) {
-            if (data.balance !== undefined) document.getElementById('balance').innerText = data.balance;
-            if (data.sold !== undefined) document.getElementById('sold').innerText = data.sold;
-            if (data.queue !== undefined) document.getElementById('queue').innerText = data.queue;
-            if (data.referrals !== undefined) document.getElementById('referrals').innerText = data.referrals;
-            if (data.botStatus) {
-                botStatus = data.botStatus;
-                document.getElementById('botStatusText').innerText = botStatus === 'on' ? 'Работает' : 'Остановлен';
-                document.getElementById('botDot').className = botStatus === 'on' ? 'dot dot-on' : 'dot dot-off';
-                document.getElementById('btnSell').classList.toggle('btn-disabled', botStatus !== 'on');
-            }
-            if (data.withdrawStatus) {
-                withdrawStatus = data.withdrawStatus;
-                document.getElementById('withdrawStatusText').innerText = withdrawStatus === 'on' ? 'Открыт' : 'Закрыт';
-                document.getElementById('withdrawDot').className = withdrawStatus === 'on' ? 'dot dot-on' : 'dot dot-off';
-                document.getElementById('btnWithdraw').classList.toggle('btn-disabled', withdrawStatus !== 'on');
-            }
-        }
-        
-        if (userId) document.getElementById('userId').innerText = userId;
         
         tg.MainButton.setText("🔄 ОБНОВИТЬ");
         tg.MainButton.show();
-        tg.MainButton.onClick(() => { sendToBot('update'); });
-        
-        sendToBot('update');
+        tg.MainButton.onClick(() => {
+            tg.sendData(JSON.stringify({ action: 'update' }));
+        });
     </script>
 </body>
 </html>
