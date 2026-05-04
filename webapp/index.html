@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>MAXKING Bot</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--tg-theme-bg-color, #0a0a0a);
+            color: var(--tg-theme-text-color, #ffffff);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .card {
+            background: var(--tg-theme-secondary-bg-color, #1a1a1a);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .balance {
+            text-align: center;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #000;
+        }
+
+        .balance-amount {
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .balance-label {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .menu-btn {
+            background: var(--tg-theme-button-color, #2481cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .menu-btn:active {
+            transform: scale(0.96);
+            opacity: 0.8;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .info-label {
+            opacity: 0.7;
+        }
+
+        .info-value {
+            font-weight: bold;
+        }
+
+        .status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-left: 8px;
+        }
+
+        .status.on { background: #00ff00; box-shadow: 0 0 5px #00ff00; }
+        .status.off { background: #ff0000; box-shadow: 0 0 5px #ff0000; }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">👑</div>
+        <div class="title">MAXKING BOT</div>
+        <div class="subtitle">Зарабатывай USDT на аккаунтах MAX</div>
+    </div>
+
+    <div class="card balance">
+        <div class="balance-label">ТВОЙ БАЛАНС</div>
+        <div class="balance-amount"><span id="balance">0</span> USDT</div>
+    </div>
+
+    <div class="card">
+        <div class="info-row">
+            <span class="info-label">📱 ID пользователя</span>
+            <span class="info-value" id="userId">—</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">📦 Продано аккаунтов</span>
+            <span class="info-value" id="sold">0</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">⏳ В очереди</span>
+            <span class="info-value" id="queue">0</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">👥 Приглашено друзей</span>
+            <span class="info-value" id="referrals">0</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">🤖 Статус бота</span>
+            <span class="info-value">
+                <span id="botStatus">✅</span>
+                <span class="status on" id="statusDot"></span>
+            </span>
+        </div>
+    </div>
+
+    <div class="menu-grid">
+        <button class="menu-btn" onclick="sendAction('sell')">🎮 Сдать Max</button>
+        <button class="menu-btn" onclick="sendAction('queue')">📋 Очередь</button>
+        <button class="menu-btn" onclick="sendAction('balance')">💰 Баланс</button>
+        <button class="menu-btn" onclick="sendAction('withdraw')">💸 Вывести</button>
+        <button class="menu-btn" onclick="sendAction('referrals')">👥 Рефералы</button>
+        <button class="menu-btn" onclick="sendAction('top')">🏆 ТОП</button>
+        <button class="menu-btn" onclick="sendAction('support')">💬 Поддержка</button>
+        <button class="menu-btn" onclick="closeApp()">❌ Закрыть</button>
+    </div>
+
+    <div class="footer">
+        MAXKING BOT — Заработок на аккаунтах MAX
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        
+        // Разворачиваем на весь экран
+        tg.expand();
+        
+        // Получаем данные пользователя
+        let user = tg.initDataUnsafe?.user;
+        
+        if (user) {
+            document.getElementById('userId').innerText = user.id;
+            document.getElementById('balance').innerText = '0';
+        }
+        
+        // Функция отправки действия в бот
+        function sendAction(action) {
+            tg.sendData(JSON.stringify({ action: action }));
+            tg.close();
+        }
+        
+        function closeApp() {
+            tg.close();
+        }
+        
+        // Показываем главную кнопку
+        tg.MainButton.setText("👑 MAXKING");
+        tg.MainButton.show();
+        tg.MainButton.onClick(() => {
+            tg.sendData(JSON.stringify({ action: 'main_menu' }));
+            tg.close();
+        });
+    </script>
+</body>
+</html>
