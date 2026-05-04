@@ -16,17 +16,29 @@
             background: var(--tg-theme-button-color);
             color: var(--tg-theme-button-text-color);
             border: none;
-            padding: 12px 24px;
+            padding: 12px 20px;
             border-radius: 12px;
-            margin: 8px;
-            font-size: 16px;
+            margin: 6px;
+            font-size: 14px;
             cursor: pointer;
         }
         .balance {
-            font-size: 32px;
+            font-size: 28px;
             font-weight: bold;
             text-align: center;
             padding: 20px;
+        }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            display: none;
         }
     </style>
 </head>
@@ -45,14 +57,24 @@
     <button onclick="sendAction('support')">💬 Поддержка</button>
     <button onclick="closeApp()">❌ Закрыть</button>
 
+    <div id="toast" class="toast"></div>
+
     <script>
         let tg = window.Telegram.WebApp;
         tg.expand();
         
+        function showToast(msg) {
+            let toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 2000);
+        }
+        
         function sendAction(action) {
             console.log("Отправка: " + action);
+            showToast("📤 Отправлено: " + action);
             tg.sendData(JSON.stringify({ action: action }));
-            tg.close();
+            // НЕ ЗАКРЫВАЕМ ПРИЛОЖЕНИЕ
         }
         
         function closeApp() {
