@@ -60,8 +60,23 @@
     <div id="toast" class="toast"></div>
 
     <script>
-        let tg = window.Telegram.WebApp;
-        tg.expand();
+        // Ждём полной загрузки
+        document.addEventListener('DOMContentLoaded', function() {
+            let tg = window.Telegram.WebApp;
+            tg.ready();
+            tg.expand();
+            
+            window.tg = tg;
+            
+            console.log("✅ Telegram WebApp инициализирован");
+            
+            // Показываем, что приложение готово
+            tg.MainButton.setText("🔄 ОБНОВИТЬ");
+            tg.MainButton.show();
+            tg.MainButton.onClick(function() {
+                sendAction('update');
+            });
+        });
         
         function showToast(msg) {
             let toast = document.getElementById('toast');
@@ -71,21 +86,27 @@
         }
         
         function sendAction(action) {
-            console.log("Отправка: " + action);
+            if (!window.tg) {
+                console.error("Telegram WebApp не инициализирован");
+                showToast("❌ Ошибка: перезагрузи приложение");
+                return;
+            }
+            
+            console.log("Отправка действия: " + action);
             showToast("📤 Отправлено: " + action);
-            tg.sendData(JSON.stringify({ action: action }));
-            // НЕ ЗАКРЫВАЕМ ПРИЛОЖЕНИЕ
+            
+            try {
+                window.tg.sendData(JSON.stringify({ action: action }));
+                console.log("✅ Данные отправлены");
+            } catch(e) {
+                console.error("Ошибка отправки: " + e);
+                showToast("❌ Ошибка отправки");
+            }
         }
         
         function closeApp() {
-            tg.close();
+            if (window.tg) window.tg.close();
         }
-        
-        tg.MainButton.setText("🔄 ОБНОВИТЬ");
-        tg.MainButton.show();
-        tg.MainButton.onClick(() => {
-            tg.sendData(JSON.stringify({ action: 'update' }));
-        });
     </script>
 </body>
 </html>
