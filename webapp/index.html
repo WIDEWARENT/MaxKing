@@ -50,6 +50,7 @@
         tg.expand();
         
         function sendAction(action) {
+            console.log("Отправка: " + action);
             tg.sendData(JSON.stringify({ action: action }));
             tg.close();
         }
