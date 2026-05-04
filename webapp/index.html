@@ -6,152 +6,485 @@
     <title>MAXKING Bot</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: var(--tg-theme-bg-color, #0a0a0a);
             color: var(--tg-theme-text-color, #ffffff);
-            padding: 20px;
             min-height: 100vh;
-            transition: background 0.3s ease;
+            transition: all 0.3s ease;
         }
-        body.light { background: #f5f5f5; color: #1a1a1a; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .logo { font-size: 48px; margin-bottom: 10px; }
-        .title { font-size: 24px; font-weight: bold; background: linear-gradient(135deg, #FFD700, #FFA500); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .subtitle { font-size: 14px; opacity: 0.7; margin-top: 5px; }
+
+        /* Светлая тема */
+        body.light {
+            background: #f0f2f5;
+            color: #1a1a1a;
+        }
+
+        /* Контейнер */
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Шапка */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+        }
+
+        .logo {
+            font-size: 56px;
+            margin-bottom: 10px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #FFD700, #FF8C00);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            opacity: 0.7;
+            margin-top: 8px;
+        }
+
+        /* Карточки */
         .card {
             background: var(--tg-theme-secondary-bg-color, #1a1a1a);
-            border-radius: 16px;
+            border-radius: 20px;
             padding: 20px;
-            margin-bottom: 15px;
-            transition: background 0.3s ease;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        body.light .card { background: #ffffff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        .balance { text-align: center; background: linear-gradient(135deg, #FFD700, #FFA500); color: #000; }
-        .balance-amount { font-size: 36px; font-weight: bold; }
-        .balance-label { font-size: 14px; opacity: 0.8; }
-        .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        body.light .info-row { border-bottom: 1px solid rgba(0,0,0,0.1); }
-        .info-label { opacity: 0.7; }
-        .info-value { font-weight: bold; }
-        .status { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-left: 8px; }
-        .status.on { background: #00ff00; }
-        .status.off { background: #ff0000; }
-        .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 20px; }
+
+        body.light .card {
+            background: #ffffff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        /* Баланс */
+        .balance-card {
+            background: linear-gradient(135deg, #FFD700, #FF8C00);
+            color: #1a1a1a;
+            text-align: center;
+        }
+
+        .balance-amount {
+            font-size: 48px;
+            font-weight: bold;
+        }
+
+        .balance-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        /* Информационные строки */
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        body.light .info-row {
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+        }
+
+        .info-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            opacity: 0.8;
+        }
+
+        .info-value {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        /* Статус-индикаторы */
+        .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-left: 8px;
+        }
+        .status-dot.on { background: #34c759; box-shadow: 0 0 5px #34c759; }
+        .status-dot.off { background: #ff3b30; box-shadow: 0 0 5px #ff3b30; }
+
+        /* Сетка кнопок */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+
         .menu-btn {
             background: var(--tg-theme-button-color, #2481cc);
             color: var(--tg-theme-button-text-color, #ffffff);
             border: none;
-            padding: 15px;
-            border-radius: 12px;
-            font-size: 16px;
+            padding: 16px;
+            border-radius: 14px;
+            font-size: 15px;
             font-weight: 500;
             cursor: pointer;
-            transition: transform 0.2s;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
-        .menu-btn:active { transform: scale(0.96); }
-        .close-btn { background: #ff3b30; }
-        .form-card { display: none; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .form-card input {
+
+        .menu-btn:active {
+            transform: scale(0.96);
+            opacity: 0.9;
+        }
+
+        .danger-btn {
+            background: #ff3b30;
+        }
+
+        /* Формы */
+        .form-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--tg-theme-bg-color, #0a0a0a);
+            z-index: 100;
+            padding: 20px;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+            display: none;
+        }
+
+        body.light .form-container {
+            background: #f0f2f5;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .form-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .form-title {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .close-form {
+            font-size: 28px;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group textarea {
             width: 100%;
             padding: 14px;
-            border-radius: 12px;
-            border: 1px solid #555;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.2);
             background: var(--tg-theme-secondary-bg-color, #1a1a1a);
             color: var(--tg-theme-text-color, #ffffff);
-            margin-bottom: 15px;
             font-size: 16px;
+            transition: all 0.2s;
         }
-        .form-card button {
+
+        body.light .form-group input,
+        body.light .form-group textarea {
+            border-color: rgba(0,0,0,0.1);
+            background: #ffffff;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #FFD700;
+        }
+
+        .submit-btn {
             width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #FFD700, #FFA500);
+            padding: 16px;
+            background: linear-gradient(135deg, #FFD700, #FF8C00);
             border: none;
-            border-radius: 12px;
+            border-radius: 14px;
+            font-size: 18px;
             font-weight: bold;
-            font-size: 16px;
             cursor: pointer;
-            margin-bottom: 10px;
+            margin-top: 20px;
         }
-        .cancel-btn { background: #555 !important; color: white !important; }
-        .theme-btn {
+
+        .back-btn {
             background: transparent;
             border: 1px solid var(--tg-theme-button-color, #2481cc);
-            color: var(--tg-theme-text-color, #ffffff);
-            padding: 8px 16px;
-            border-radius: 20px;
-            margin-top: 10px;
-            cursor: pointer;
+            color: var(--tg-theme-button-color, #2481cc);
+            margin-top: 12px;
         }
-        .footer { text-align: center; margin-top: 30px; font-size: 12px; opacity: 0.5; }
-        .loading { text-align: center; padding: 20px; display: none; }
+
+        /* Список в очереди и топе */
+        .list-item {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        body.light .list-item {
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+        }
+
+        .list-item:last-child {
+            border-bottom: none;
+        }
+
+        .ref-link {
+            background: rgba(0,0,0,0.1);
+            padding: 12px;
+            border-radius: 12px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 15px 0;
+        }
+
+        /* Анимация загрузки */
+        .loader {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,215,0,0.3);
+            border-top-color: #FFD700;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast уведомления */
         .toast {
             position: fixed;
             bottom: 20px;
             left: 20px;
             right: 20px;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
             color: white;
-            padding: 12px;
-            border-radius: 12px;
+            padding: 14px;
+            border-radius: 14px;
             text-align: center;
             z-index: 1000;
             display: none;
+            animation: fadeInUp 0.3s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .toast.error {
+            background: #ff3b30;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            font-size: 12px;
+            opacity: 0.5;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="logo">👑</div>
-        <div class="title">MAXKING BOT</div>
-        <div class="subtitle">Зарабатывай USDT на номерах MAX</div>
-        <button class="theme-btn" onclick="toggleTheme()">🌓 Сменить тему</button>
-    </div>
-
-    <div id="mainScreen">
-        <div class="card balance">
-            <div class="balance-label">ТВОЙ БАЛАНС</div>
-            <div class="balance-amount"><span id="balance">0</span> USDT</div>
+    <div class="container">
+        <!-- Шапка -->
+        <div class="header">
+            <div class="logo">👑</div>
+            <div class="title">MAXKING BOT</div>
+            <div class="subtitle">Зарабатывай USDT на номерах MAX</div>
         </div>
-        <div class="card">
-            <div class="info-row"><span class="info-label">📱 ID пользователя</span><span class="info-value" id="userId">—</span></div>
-            <div class="info-row"><span class="info-label">📦 Сдано номеров</span><span class="info-value" id="sold">0</span></div>
-            <div class="info-row"><span class="info-label">⏳ В очереди</span><span class="info-value" id="queue">0</span></div>
-            <div class="info-row"><span class="info-label">👥 Приглашено друзей</span><span class="info-value" id="referrals">0</span></div>
-            <div class="info-row"><span class="info-label">🤖 Статус бота</span><span class="info-value"><span id="botStatus">✅</span><span class="status on" id="statusDot"></span></span></div>
-            <div class="info-row"><span class="info-label">💸 Статус выводов</span><span class="info-value" id="withdrawStatus">✅</span></div>
+
+        <!-- Главный экран -->
+        <div id="mainScreen">
+            <!-- Баланс -->
+            <div class="card balance-card">
+                <div class="balance-label">ТВОЙ БАЛАНС</div>
+                <div class="balance-amount"><span id="balance">0</span> USDT</div>
+            </div>
+
+            <!-- Статистика -->
+            <div class="card">
+                <div class="info-row">
+                    <span class="info-label">📱 ID</span>
+                    <span class="info-value" id="userId">—</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">📦 Сдано номеров</span>
+                    <span class="info-value" id="sold">0</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">⏳ В очереди</span>
+                    <span class="info-value" id="queue">0</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">👥 Приглашено</span>
+                    <span class="info-value" id="referrals">0</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">🤖 Статус бота</span>
+                    <span class="info-value">
+                        <span id="botStatus">✅</span>
+                        <span class="status-dot on" id="botDot"></span>
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">💸 Статус выводов</span>
+                    <span class="info-value" id="withdrawStatus">✅</span>
+                </div>
+            </div>
         </div>
+
+        <!-- Меню кнопок -->
+        <div class="menu-grid">
+            <button class="menu-btn" onclick="openForm('sell')">🎮 Сдать Max</button>
+            <button class="menu-btn" onclick="openForm('queue')">📋 Очередь</button>
+            <button class="menu-btn" onclick="openForm('balance')">💰 Баланс</button>
+            <button class="menu-btn" onclick="openForm('withdraw')">💸 Вывести</button>
+            <button class="menu-btn" onclick="openForm('referrals')">👥 Рефералы</button>
+            <button class="menu-btn" onclick="openForm('top')">🏆 ТОП</button>
+            <button class="menu-btn" onclick="openForm('support')">💬 Поддержка</button>
+            <button class="menu-btn danger-btn" onclick="closeApp()">❌ Закрыть</button>
+        </div>
+
+        <div class="footer">MAXKING BOT — зарабатывай с нами!</div>
     </div>
 
-    <div id="sellForm" class="card form-card">
-        <h3>🎮 Сдать номер MAX</h3>
-        <input type="text" id="phoneInput" placeholder="📱 Введи номер телефона" maxlength="15">
-        <button onclick="submitSell()">✅ Отправить</button>
-        <button class="cancel-btn" onclick="hideForm('sellForm')">❌ Отмена</button>
+    <!-- ФОРМЫ -->
+    
+    <!-- Форма: Сдать Max -->
+    <div id="formSell" class="form-container">
+        <div class="form-header">
+            <span class="form-title">🎮 Сдать номер MAX</span>
+            <span class="close-form" onclick="closeForm('formSell')">✕</span>
+        </div>
+        <div class="form-group">
+            <label>📱 Номер телефона</label>
+            <input type="tel" id="sellPhone" placeholder="+7XXXXXXXXXX" maxlength="15">
+        </div>
+        <button class="submit-btn" onclick="submitSell()">✅ Отправить</button>
     </div>
 
-    <div id="queueScreen" class="card form-card">
-        <h3>📋 Аккаунты в очереди</h3>
-        <div id="queueList" style="margin: 15px 0;"></div>
-        <button class="cancel-btn" onclick="hideForm('queueScreen')">🔙 Назад</button>
+    <!-- Форма: Очередь -->
+    <div id="formQueue" class="form-container">
+        <div class="form-header">
+            <span class="form-title">📋 Аккаунты в очереди</span>
+            <span class="close-form" onclick="closeForm('formQueue')">✕</span>
+        </div>
+        <div id="queueList" class="loader" style="display: none;">
+            <div class="spinner"></div>
+            <div>Загрузка...</div>
+        </div>
+        <div id="queueContent"></div>
     </div>
 
-    <div class="menu-grid">
-        <button class="menu-btn" onclick="showSellForm()">🎮 Сдать Max</button>
-        <button class="menu-btn" onclick="loadQueue()">📋 Очередь</button>
-        <button class="menu-btn" onclick="loadBalance()">💰 Баланс</button>
-        <button class="menu-btn" onclick="sendAction('withdraw')">💸 Вывести</button>
-        <button class="menu-btn" onclick="sendAction('referrals')">👥 Рефералы</button>
-        <button class="menu-btn" onclick="sendAction('top')">🏆 ТОП</button>
-        <button class="menu-btn" onclick="sendAction('support')">💬 Поддержка</button>
-        <button class="menu-btn close-btn" onclick="closeApp()">❌ Закрыть</button>
+    <!-- Форма: Вывести -->
+    <div id="formWithdraw" class="form-container">
+        <div class="form-header">
+            <span class="form-title">💸 Вывод средств</span>
+            <span class="close-form" onclick="closeForm('formWithdraw')">✕</span>
+        </div>
+        <div class="form-group">
+            <label>💰 Сумма (USDT)</label>
+            <input type="number" id="withdrawAmount" placeholder="Минимум 12 USDT">
+        </div>
+        <button class="submit-btn" onclick="submitWithdraw()">💸 Запросить вывод</button>
     </div>
 
-    <div class="footer">MAXKING BOT — Заработок на номерах MAX</div>
-    <div class="loading" id="loading">⏳ Загрузка...</div>
-    <div class="toast" id="toast"></div>
+    <!-- Форма: Рефералы -->
+    <div id="formReferrals" class="form-container">
+        <div class="form-header">
+            <span class="form-title">👥 Реферальная система</span>
+            <span class="close-form" onclick="closeForm('formReferrals')">✕</span>
+        </div>
+        <div id="referralContent" class="loader"><div class="spinner"></div><div>Загрузка...</div></div>
+    </div>
+
+    <!-- Форма: ТОП -->
+    <div id="formTop" class="form-container">
+        <div class="form-header">
+            <span class="form-title">🏆 ТОП сдавших номера</span>
+            <span class="close-form" onclick="closeForm('formTop')">✕</span>
+        </div>
+        <div id="topContent" class="loader"><div class="spinner"></div><div>Загрузка...</div></div>
+    </div>
+
+    <!-- Форма: Поддержка -->
+    <div id="formSupport" class="form-container">
+        <div class="form-header">
+            <span class="form-title">💬 Поддержка</span>
+            <span class="close-form" onclick="closeForm('formSupport')">✕</span>
+        </div>
+        <div class="form-group">
+            <label>📝 Ваш вопрос</label>
+            <textarea id="supportMsg" rows="4" placeholder="Опишите вашу проблему..."></textarea>
+        </div>
+        <button class="submit-btn" onclick="submitSupport()">📨 Отправить</button>
+    </div>
+
+    <!-- Toast уведомление -->
+    <div id="toast" class="toast"></div>
 
     <script>
         let tg = window.Telegram.WebApp;
@@ -160,73 +493,150 @@
         
         tg.expand();
         
+        // Тема
         let isDark = true;
         function toggleTheme() {
             isDark = !isDark;
             document.body.classList.toggle('light', !isDark);
         }
         
+        // Toast
         function showToast(msg, isError = false) {
             let toast = document.getElementById('toast');
-            toast.style.background = isError ? '#ff3b30' : 'rgba(0,0,0,0.8)';
-            toast.innerText = msg;
+            toast.textContent = msg;
+            toast.className = isError ? 'toast error' : 'toast';
             toast.style.display = 'block';
             setTimeout(() => { toast.style.display = 'none'; }, 3000);
         }
         
-        function hideAllForms() {
-            document.getElementById('sellForm').style.display = 'none';
-            document.getElementById('queueScreen').style.display = 'none';
-            document.getElementById('mainScreen').style.display = 'block';
+        // Открытие/закрытие форм
+        function openForm(formName) {
+            document.getElementById('mainScreen').style.display = 'none';
+            let formId = 'form' + formName.charAt(0).toUpperCase() + formName.slice(1);
+            document.getElementById(formId).style.display = 'block';
+            
+            if (formName === 'queue') loadQueueData();
+            if (formName === 'referrals') loadReferralsData();
+            if (formName === 'top') loadTopData();
+            if (formName === 'balance') loadBalanceData();
         }
         
-        function hideForm(formId) {
+        function closeForm(formId) {
             document.getElementById(formId).style.display = 'none';
             document.getElementById('mainScreen').style.display = 'block';
         }
         
-        function showSellForm() {
-            hideAllForms();
-            document.getElementById('sellForm').style.display = 'block';
+        function closeApp() { tg.close(); }
+        
+        // Отправка действий в бот через sendData
+        function sendToBot(action, data = {}) {
+            tg.sendData(JSON.stringify({ action: action, ...data }));
         }
         
+        // Сдать номер
         function submitSell() {
-            let phone = document.getElementById('phoneInput').value;
+            let phone = document.getElementById('sellPhone').value;
             if (!phone) {
                 showToast('Введи номер телефона', true);
                 return;
             }
-            tg.sendData(JSON.stringify({ action: 'sell', phone: phone }));
-            document.getElementById('phoneInput').value = '';
-            hideForm('sellForm');
+            sendToBot('sell', { phone: phone });
+            document.getElementById('sellPhone').value = '';
+            closeForm('formSell');
             showToast('✅ Аккаунт отправлен на проверку!');
         }
         
-        function sendAction(action) {
-            tg.sendData(JSON.stringify({ action: action }));
-            tg.close();
+        // Вывести
+        function submitWithdraw() {
+            let amount = document.getElementById('withdrawAmount').value;
+            if (!amount || amount < 12) {
+                showToast('Минимальная сумма вывода 12 USDT', true);
+                return;
+            }
+            sendToBot('withdraw', { amount: amount });
+            document.getElementById('withdrawAmount').value = '';
+            closeForm('formWithdraw');
+            showToast('✅ Заявка отправлена!');
         }
         
-        function loadBalance() {
-            tg.sendData(JSON.stringify({ action: 'balance' }));
-            tg.close();
+        // Поддержка
+        function submitSupport() {
+            let msg = document.getElementById('supportMsg').value;
+            if (!msg) {
+                showToast('Введи текст сообщения', true);
+                return;
+            }
+            sendToBot('support', { message: msg });
+            document.getElementById('supportMsg').value = '';
+            closeForm('formSupport');
+            showToast('✅ Сообщение отправлено!');
         }
         
-        function loadQueue() {
-            hideAllForms();
-            document.getElementById('queueScreen').style.display = 'block';
-            document.getElementById('queueList').innerHTML = '<div style="padding: 10px; text-align: center;">⏳ Загрузка...</div>';
-            tg.sendData(JSON.stringify({ action: 'queue' }));
-            tg.close();
+        // Загрузка данных (симуляция — реальные данные придёт от бота)
+        function loadBalanceData() {
+            sendToBot('balance');
+            closeForm('formBalance');
         }
         
-        function closeApp() { tg.close(); }
+        function loadQueueData() {
+            let content = document.getElementById('queueContent');
+            let loader = document.getElementById('queueList');
+            loader.style.display = 'block';
+            content.innerHTML = '';
+            sendToBot('queue');
+            setTimeout(() => {
+                loader.style.display = 'none';
+                content.innerHTML = '<div class="list-item" style="text-align:center;">📭 Очередь пуста</div>';
+            }, 800);
+        }
         
+        function loadReferralsData() {
+            let content = document.getElementById('referralContent');
+            content.innerHTML = '<div class="loader"><div class="spinner"></div><div>Загрузка...</div></div>';
+            sendToBot('referrals');
+            setTimeout(() => {
+                let refLink = `https://t.me/TheMaxKingBot?start=${userId}`;
+                content.innerHTML = `
+                    <div class="ref-link">${refLink}</div>
+                    <div class="info-row"><span>👥 Приглашено:</span><span>0</span></div>
+                    <div class="info-row"><span>💰 Заработано:</span><span>0 USDT</span></div>
+                    <button class="submit-btn" style="margin-top:20px" onclick="copyRefLink('${refLink}')">📋 Скопировать ссылку</button>
+                `;
+            }, 800);
+        }
+        
+        function copyRefLink(link) {
+            navigator.clipboard.writeText(link);
+            showToast('📋 Ссылка скопирована!');
+        }
+        
+        function loadTopData() {
+            let content = document.getElementById('topContent');
+            content.innerHTML = '<div class="loader"><div class="spinner"></div><div>Загрузка...</div></div>';
+            sendToBot('top');
+            setTimeout(() => {
+                content.innerHTML = '<div class="list-item" style="text-align:center;">🏆 Пока никто не сдавал номера</div>';
+            }, 800);
+        }
+        
+        // Обработка данных от бота
+        function updateUserData(data) {
+            if (data.balance) document.getElementById('balance').innerText = data.balance;
+            if (data.sold) document.getElementById('sold').innerText = data.sold;
+            if (data.queue) document.getElementById('queue').innerText = data.queue;
+            if (data.referrals) document.getElementById('referrals').innerText = data.referrals;
+        }
+        
+        // Инициализация
         if (userId) document.getElementById('userId').innerText = userId;
         
+        // Главная кнопка обновления
         tg.MainButton.setText("🔄 ОБНОВИТЬ");
         tg.MainButton.show();
-        tg.MainButton.onClick(() => { loadBalance(); });
+        tg.MainButton.onClick(() => { sendToBot('update'); });
+        
+        // Запрос данных при открытии
+        sendToBot('update');
     </script>
 </body>
 </html>
