@@ -18,6 +18,13 @@
             color: var(--tg-theme-text-color, #ffffff);
             padding: 20px;
             min-height: 100vh;
+            transition: background 0.3s ease;
+        }
+
+        /* Светлая тема */
+        body.light {
+            background: #ffffff;
+            color: #000000;
         }
 
         .header {
@@ -50,6 +57,11 @@
             border-radius: 16px;
             padding: 20px;
             margin-bottom: 15px;
+            transition: background 0.3s ease;
+        }
+
+        body.light .card {
+            background: #f5f5f5;
         }
 
         .balance {
@@ -99,6 +111,10 @@
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
 
+        body.light .info-row {
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
         .info-label {
             opacity: 0.7;
         }
@@ -124,13 +140,49 @@
             font-size: 12px;
             opacity: 0.5;
         }
+
+        .theme-btn {
+            background: transparent;
+            border: 1px solid var(--tg-theme-button-color, #2481cc);
+            color: var(--tg-theme-text-color, #ffffff);
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        .add-form {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .add-form input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--tg-theme-hint-color, #555);
+            background: var(--tg-theme-secondary-bg-color, #1a1a1a);
+            color: var(--tg-theme-text-color, #ffffff);
+            margin-bottom: 12px;
+        }
+
+        .add-form button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="logo">👑</div>
         <div class="title">MAXKING BOT</div>
-        <div class="subtitle">Зарабатывай USDT на аккаунтах MAX</div>
+        <div class="subtitle">Зарабатывай USDT на номерах MAX</div>
+        <button class="theme-btn" onclick="toggleTheme()">🌓 Сменить тему</button>
     </div>
 
     <div class="card balance">
@@ -144,7 +196,7 @@
             <span class="info-value" id="userId">—</span>
         </div>
         <div class="info-row">
-            <span class="info-label">📦 Продано аккаунтов</span>
+            <span class="info-label">📦 Сдано номеров</span>
             <span class="info-value" id="sold">0</span>
         </div>
         <div class="info-row">
@@ -162,10 +214,21 @@
                 <span class="status on" id="statusDot"></span>
             </span>
         </div>
+        <div class="info-row">
+            <span class="info-label">💸 Статус выводов</span>
+            <span class="info-value" id="withdrawStatus">✅</span>
+        </div>
+    </div>
+
+    <!-- Форма добавления номера -->
+    <div class="card add-form" id="addForm">
+        <input type="text" id="phoneInput" placeholder="📱 Введи номер телефона" maxlength="15">
+        <button onclick="submitPhone()">✅ Отправить номер</button>
+        <button onclick="hideForm()">❌ Отмена</button>
     </div>
 
     <div class="menu-grid">
-        <button class="menu-btn" onclick="sendAction('sell')">🎮 Сдать Max</button>
+        <button class="menu-btn" onclick="showAddForm()">🎮 Сдать Max</button>
         <button class="menu-btn" onclick="sendAction('queue')">📋 Очередь</button>
         <button class="menu-btn" onclick="sendAction('balance')">💰 Баланс</button>
         <button class="menu-btn" onclick="sendAction('withdraw')">💸 Вывести</button>
@@ -176,24 +239,62 @@
     </div>
 
     <div class="footer">
-        MAXKING BOT — Заработок на аккаунтах MAX
+        MAXKING BOT — Заработок на номерах MAX
     </div>
 
     <script>
         let tg = window.Telegram.WebApp;
+        let user = tg.initDataUnsafe?.user;
         
         // Разворачиваем на весь экран
         tg.expand();
         
-        // Получаем данные пользователя
-        let user = tg.initDataUnsafe?.user;
+        // Тема
+        let isDark = true;
         
-        if (user) {
-            document.getElementById('userId').innerText = user.id;
-            document.getElementById('balance').innerText = '0';
+        function toggleTheme() {
+            isDark = !isDark;
+            if (isDark) {
+                document.body.classList.remove('light');
+            } else {
+                document.body.classList.add('light');
+            }
         }
         
-        // Функция отправки действия в бот
+        // Отображение данных пользователя
+        if (user) {
+            document.getElementById('userId').innerText = user.id;
+        }
+        
+        // Загрузка реальных данных с бота
+        async function loadData() {
+            tg.sendData(JSON.stringify({ action: 'get_data' }));
+        }
+        
+        // Обработка данных от бота
+        tg.onEvent('mainButtonClicked', () => {
+            loadData();
+        });
+        
+        function showAddForm() {
+            document.getElementById('addForm').style.display = 'block';
+        }
+        
+        function hideForm() {
+            document.getElementById('addForm').style.display = 'none';
+        }
+        
+        function submitPhone() {
+            let phone = document.getElementById('phoneInput').value;
+            if (!phone) {
+                tg.showAlert('Введи номер телефона');
+                return;
+            }
+            tg.sendData(JSON.stringify({ action: 'sell', phone: phone }));
+            document.getElementById('addForm').style.display = 'none';
+            document.getElementById('phoneInput').value = '';
+        }
+        
         function sendAction(action) {
             tg.sendData(JSON.stringify({ action: action }));
             tg.close();
@@ -203,13 +304,34 @@
             tg.close();
         }
         
+        // Обновление данных из бота
+        function updateData(balance, sold, queue, referrals, botStatus, withdrawStatus) {
+            document.getElementById('balance').innerText = balance;
+            document.getElementById('sold').innerText = sold;
+            document.getElementById('queue').innerText = queue;
+            document.getElementById('referrals').innerText = referrals;
+            document.getElementById('botStatus').innerHTML = botStatus === 'on' ? '✅' : '❌';
+            document.getElementById('withdrawStatus').innerHTML = withdrawStatus === 'on' ? '✅' : '❌';
+            let dot = document.getElementById('statusDot');
+            if (botStatus === 'on') {
+                dot.className = 'status on';
+            } else {
+                dot.className = 'status off';
+            }
+        }
+        
         // Показываем главную кнопку
-        tg.MainButton.setText("👑 MAXKING");
+        tg.MainButton.setText("🔄 ОБНОВИТЬ");
         tg.MainButton.show();
         tg.MainButton.onClick(() => {
-            tg.sendData(JSON.stringify({ action: 'main_menu' }));
-            tg.close();
+            loadData();
         });
+        
+        // Загружаем данные при открытии
+        loadData();
+        
+        // Слушаем сообщения от бота (если нужно)
+        tg.onEvent('viewportChanged', () => {});
     </script>
 </body>
 </html>
