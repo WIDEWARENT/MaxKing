@@ -27,8 +27,6 @@
         .stat-row:last-child { border-bottom: none; }
         .stat-label { display: flex; align-items: center; gap: 8px; font-size: 15px; color: #aaa; }
         .stat-value { font-weight: 600; font-size: 16px; }
-        .badge-on { background: rgba(52, 199, 89, 0.15); color: #34c759; }
-        .badge-off { background: rgba(255, 59, 48, 0.15); color: #ff3b30; }
         .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-left: 8px; }
         .dot-on { background: #34c759; }
         .dot-off { background: #ff3b30; }
@@ -49,7 +47,6 @@
         .ref-link { background: #1a1d24; padding: 14px; border-radius: 16px; font-family: monospace; word-break: break-all; margin: 16px 0; }
         .toast { position: fixed; bottom: 80px; left: 20px; right: 20px; background: rgba(0,0,0,0.9); padding: 14px; border-radius: 14px; text-align: center; z-index: 1100; display: none; }
         .footer { text-align: center; margin-top: 24px; padding: 16px; font-size: 12px; color: #555; }
-        .balance-detail { font-size: 14px; color: #FFD700; margin-top: 8px; }
     </style>
 </head>
 <body>
@@ -59,14 +56,12 @@
             <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
         </div>
 
-        <!-- Баланс (кликабельный) -->
         <div class="balance-card" onclick="openModal('balance')">
             <div class="balance-label">ТВОЙ БАЛАНС</div>
             <div class="balance-amount"><span id="balance">0</span><span class="balance-unit"> USDT</span></div>
-            <div class="balance-detail">👇 Нажми для деталей</div>
+            <div class="balance-detail" style="font-size:12px; margin-top:8px;">👇 Нажми для деталей</div>
         </div>
 
-        <!-- Статистика -->
         <div class="stats-card">
             <div class="stat-row"><span class="stat-label">🆔 ID</span><span class="stat-value" id="userId">—</span></div>
             <div class="stat-row"><span class="stat-label">📦 Сдано номеров</span><span class="stat-value" id="sold">0</span></div>
@@ -76,7 +71,6 @@
             <div class="stat-row"><span class="stat-label">💸 Вывод средств</span><span class="stat-value"><span id="withdrawStatusText">Открыт</span><span class="dot dot-on" id="withdrawDot"></span></span></div>
         </div>
 
-        <!-- Кнопки -->
         <div class="button-grid">
             <button class="btn" id="btnSell" onclick="openModal('sell')">🎮 Сдать Max</button>
             <button class="btn" id="btnQueue" onclick="openModal('queue')">📋 Очередь</button>
@@ -126,98 +120,103 @@
         function openModal(type) {
             if (type === 'sell' && botStatus === 'off') { showToast('🔴 Приём аккаунтов закрыт', true); return; }
             if (type === 'withdraw' && withdrawStatus === 'off') { showToast('🔴 Вывод средств закрыт', true); return; }
-            if (type === 'balance') { loadBalanceDetails(); }
+            
             let modalId = 'modal' + type.charAt(0).toUpperCase() + type.slice(1);
             let modal = document.getElementById(modalId);
             if (modal) modal.style.display = 'flex';
+            
             if (type === 'queue') loadQueue();
             if (type === 'referrals') loadReferrals();
             if (type === 'top') loadTop();
+            if (type === 'balance') loadBalanceDetails();
         }
         
         function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
         function closeApp() { tg.close(); }
-        function sendToBot(action, extra = {}) { tg.sendData(JSON.stringify({ action: action, ...extra })); }
+        
+        function sendToBot(action, extra = {}) {
+            tg.sendData(JSON.stringify({ action: action, ...extra }));
+        }
         
         function submitSell() {
             let phone = document.getElementById('phoneInput').value;
-            if (!phone) { showToast('Введи номер', true); return; }
+            if (!phone) { showToast('Введи номер телефона', true); return; }
             sendToBot('sell', { phone: phone });
             document.getElementById('phoneInput').value = '';
             closeModal('modalSell');
-            showToast('✅ Аккаунт отправлен!');
+            showToast('✅ Аккаунт отправлен на проверку!');
         }
         
         function submitWithdraw() {
             let amount = document.getElementById('withdrawAmount').value;
-            if (!amount || amount < 12) { showToast('Минимум 12 USDT', true); return; }
+            if (!amount || amount < 12) { showToast('Минимальная сумма 12 USDT', true); return; }
             sendToBot('withdraw', { amount: amount });
             document.getElementById('withdrawAmount').value = '';
             closeModal('modalWithdraw');
-            showToast('✅ Заявка отправлена!');
+            showToast('✅ Заявка на вывод отправлена!');
         }
         
         function submitSupport() {
             let msg = document.getElementById('supportMsg').value;
-            if (!msg) { showToast('Введи сообщение', true); return; }
+            if (!msg) { showToast('Введи текст сообщения', true); return; }
             sendToBot('support', { message: msg });
             document.getElementById('supportMsg').value = '';
             closeModal('modalSupport');
-            showToast('✅ Сообщение отправлено!');
+            showToast('✅ Сообщение отправлено администратору!');
         }
         
         function loadBalanceDetails() {
             let content = document.getElementById('balanceContent');
             content.innerHTML = '<div style="text-align:center; padding:40px;">⏳ Загрузка...</div>';
             sendToBot('balance_details');
-            setTimeout(() => {
-                content.innerHTML = '<div class="stat-row"><span>💰 Баланс:</span><span id="detailBalance">0 USDT</span></div><div class="stat-row"><span>📦 Сдано:</span><span id="detailSold">0</span></div><div class="stat-row"><span>⏳ В очереди:</span><span id="detailQueue">0</span></div><div class="stat-row"><span>👥 Рефералы:</span><span id="detailReferrals">0</span></div><button class="btn btn-primary" style="margin-top:20px" onclick="closeModal(\'modalBalance\')">Закрыть</button>';
-            }, 500);
         }
         
         function loadQueue() {
             let content = document.getElementById('queueContent');
             content.innerHTML = '<div style="text-align:center; padding:40px;">⏳ Загрузка...</div>';
             sendToBot('queue');
-            setTimeout(() => {
-                if (content.innerHTML.includes('Загрузка')) {
-                    content.innerHTML = '<div style="text-align:center; padding:20px;">📭 Очередь пуста</div>';
-                }
-            }, 800);
         }
         
         function loadReferrals() {
             let content = document.getElementById('referralsContent');
             content.innerHTML = '<div style="text-align:center; padding:40px;">⏳ Загрузка...</div>';
             sendToBot('referrals');
-            setTimeout(() => {
-                let refLink = `https://t.me/TheMaxKingBot?start=${userId}`;
-                content.innerHTML = `<div class="ref-link">${refLink}</div><button class="btn btn-primary" style="width:100%; margin-bottom:16px" onclick="copyRefLink('${refLink}')">📋 Скопировать ссылку</button><div class="stat-row"><span>👥 Приглашено:</span><span id="refCount">0</span></div><div class="stat-row"><span>💰 Заработано:</span><span id="refEarned">0 USDT</span></div>`;
-            }, 500);
         }
         
         function loadTop() {
             let content = document.getElementById('topContent');
             content.innerHTML = '<div style="text-align:center; padding:40px;">⏳ Загрузка...</div>';
             sendToBot('top');
-            setTimeout(() => {
-                content.innerHTML = '<div style="text-align:center; padding:20px;">🏆 Пока никто не сдавал номера</div>';
-            }, 500);
         }
         
         function copyRefLink(link) { navigator.clipboard.writeText(link); showToast('📋 Ссылка скопирована!'); }
         
-        function updateUserData(balance, sold, queue, referrals, botStat, withdrawStat) {
-            document.getElementById('balance').innerText = balance;
-            document.getElementById('sold').innerText = sold;
-            document.getElementById('queue').innerText = queue;
-            document.getElementById('referrals').innerText = referrals;
-            if (botStat) { botStatus = botStat; document.getElementById('botStatusText').innerText = botStat === 'on' ? 'Работает' : 'Остановлен'; document.getElementById('botDot').className = botStat === 'on' ? 'dot dot-on' : 'dot dot-off'; document.getElementById('btnSell').classList.toggle('btn-disabled', botStat !== 'on'); }
-            if (withdrawStat) { withdrawStatus = withdrawStat; document.getElementById('withdrawStatusText').innerText = withdrawStat === 'on' ? 'Открыт' : 'Закрыт'; document.getElementById('withdrawDot').className = withdrawStat === 'on' ? 'dot dot-on' : 'dot dot-off'; document.getElementById('btnWithdraw').classList.toggle('btn-disabled', withdrawStat !== 'on'); }
+        // Обновление UI после ответа от бота
+        function updateUI(data) {
+            if (data.balance !== undefined) document.getElementById('balance').innerText = data.balance;
+            if (data.sold !== undefined) document.getElementById('sold').innerText = data.sold;
+            if (data.queue !== undefined) document.getElementById('queue').innerText = data.queue;
+            if (data.referrals !== undefined) document.getElementById('referrals').innerText = data.referrals;
+            if (data.botStatus) {
+                botStatus = data.botStatus;
+                document.getElementById('botStatusText').innerText = botStatus === 'on' ? 'Работает' : 'Остановлен';
+                document.getElementById('botDot').className = botStatus === 'on' ? 'dot dot-on' : 'dot dot-off';
+                document.getElementById('btnSell').classList.toggle('btn-disabled', botStatus !== 'on');
+            }
+            if (data.withdrawStatus) {
+                withdrawStatus = data.withdrawStatus;
+                document.getElementById('withdrawStatusText').innerText = withdrawStatus === 'on' ? 'Открыт' : 'Закрыт';
+                document.getElementById('withdrawDot').className = withdrawStatus === 'on' ? 'dot dot-on' : 'dot dot-off';
+                document.getElementById('btnWithdraw').classList.toggle('btn-disabled', withdrawStatus !== 'on');
+            }
         }
         
         if (userId) document.getElementById('userId').innerText = userId;
-        tg.MainButton.setText("🔄 ОБНОВИТЬ"); tg.MainButton.show(); tg.MainButton.onClick(() => { sendToBot('update'); });
+        
+        tg.MainButton.setText("🔄 ОБНОВИТЬ");
+        tg.MainButton.show();
+        tg.MainButton.onClick(() => { sendToBot('update'); });
+        
         sendToBot('update');
     </script>
 </body>
